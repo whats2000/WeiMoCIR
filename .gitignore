@@ -271,7 +271,9 @@ cirr_dataset/train
 cirr_dataset/cirr
 cirr_dataset/test1
 cirr_dataset/dev
-fashionIQ_dataset
+fashionIQ_dataset/images
+fashionIQ_dataset/captions
+fashionIQ_dataset/image_splits
 
 # cache folder
 cache/
