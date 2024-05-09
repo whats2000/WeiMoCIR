@@ -25,7 +25,7 @@ from rich import print
 from data_utils import squarepad_transform, FashionIQDataset, targetpad_transform, CIRRDataset
 from combiner import Combiner
 from utils import extract_index_features, collate_fn, element_wise_sum, device, \
-    extract_index_features_with_text_captions
+    extract_index_features_with_text_captions, element_wise_sum_with_beta
 
 
 def compute_fiq_val_metrics(relative_val_dataset: FashionIQDataset,
@@ -467,6 +467,7 @@ def main():
     parser.add_argument("--text_captions_path", type=str, help="Path to the text captions for FashionIQ dataset")
     parser.add_argument("--alpha", default=0.5, type=float,
                         help="Weight for combining text and image distances, Close to 1 gives more weight to text")
+    parser.add_argument('--beta', default=-1, type=float, help='Weight for combining text and image features use element wise sum if set to 0 ~ 1')
 
     args = parser.parse_args()
 
@@ -507,7 +508,11 @@ def main():
             warnings.warn(
                 "Be careful, you are using the element-wise sum as combining_function but you have also passed a path"
                 " to a trained Combiner. Such Combiner will not be used")
-        combining_function = element_wise_sum
+
+        if 1 >= args.beta >= 0:
+            combining_function = lambda image_features, text_features: element_wise_sum_with_beta(image_features, text_features, args.beta)
+        else:
+            combining_function = element_wise_sum
     elif args.combining_function.lower() == 'combiner':
         combiner = Combiner(args.feature_dim, args.projection_dim, args.hidden_dim).to(device, non_blocking=True)
         state_dict = torch.load(args.combiner_path, map_location=device)

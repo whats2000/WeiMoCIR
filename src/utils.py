@@ -112,6 +112,16 @@ def element_wise_sum(image_features: torch.tensor, text_features: torch.tensor) 
     """
     return F.normalize(image_features + text_features, dim=-1)
 
+def element_wise_sum_with_beta(image_features: torch.tensor, text_features: torch.tensor, beta=0.65) -> torch.tensor:
+    """
+    Normalized element-wise sum of image features and text features
+    :param image_features: non-normalized image features
+    :param text_features: non-normalized text features
+    :param beta: weight for text features
+    :return: normalized element-wise sum of image and text features
+    """
+    return F.normalize((1 - beta) * image_features + beta * text_features, dim=-1)
+
 
 def generate_randomized_fiq_caption(flattened_captions: List[str]) -> List[str]:
     """
