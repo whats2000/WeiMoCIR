@@ -53,6 +53,43 @@ def extract_index_features(dataset: Union[CIRRDataset, FashionIQDataset], blip_m
             index_names.extend(names)
     return index_features, index_names
 
+
+def extract_index_features_clip(dataset: Union[CIRRDataset, FashionIQDataset], clip_model: nn.Module) -> \
+    Tuple[torch.tensor, List[str]]:
+    """
+    Extract FashionIQ or CIRR index features
+    :param dataset: FashionIQ or CIRR dataset in 'classic' mode
+    :param clip_model: CLIP model
+    :return: a tensor of features and a list of images
+    """
+    feature_dim = clip_model.visual_projection.out_features
+    classic_val_loader = DataLoader(dataset=dataset, batch_size=32, num_workers=4,
+                                    pin_memory=False, collate_fn=collate_fn)
+    index_features = torch.empty((0, feature_dim)).to(device, non_blocking=True)
+    index_names = []
+    if isinstance(dataset, CIRRDataset):
+        print(f"[{datetime.now()}] extracting CIRR {dataset.split} index features with image features")
+    elif isinstance(dataset, FashionIQDataset):
+        print(
+            f"[{datetime.now()}] extracting fashionIQ {dataset.dress_types} - {dataset.split} index features with image features")
+
+    # original
+    for names, images in tqdm(classic_val_loader):
+        # Images are stored in a dictionary
+        pixel_values_list = images['pixel_values']
+        # Convert list of pixel values to a tensor
+        pixel_values = torch.stack(pixel_values_list)
+
+        # Reshape pixel values to (batch_size * num_images, channels, height, width)
+        batch_size, num_images, channels, height, width = pixel_values.shape
+        pixel_values = pixel_values.view(batch_size * num_images, channels, height, width).to(device, non_blocking=True)
+
+        with torch.no_grad():
+            batch_features = clip_model(pixel_values, return_dict=False)[0]
+            index_features = torch.vstack((index_features, batch_features))
+            index_names.extend(names)
+    return index_features, index_names
+
 def extract_index_features_with_text_captions(
     dataset: Union[CIRRDataset, FashionIQDataset],
     blip_text_encoder: nn.Module,
@@ -93,8 +130,60 @@ def extract_index_features_with_text_captions(
 
         # Encode the captions using BLIP text encoder
         with torch.no_grad():
-            # We assume blip_text_encoder can handle empty strings and will return zero vectors for them
             text_features = blip_text_encoder(batch_captions, 77, device)
+
+        # Collect features, names, and captions
+        index_features = torch.vstack((index_features, text_features))
+        index_names.extend(names)
+        used_captions.extend(batch_captions)
+
+    return index_features, index_names, used_captions
+
+def extract_index_features_with_text_captions_clip(
+    dataset: Union[CIRRDataset, FashionIQDataset],
+    clip_text_encoder: nn.Module,
+    clip_tokenizer,
+    text_captions: List[dict],
+    k_th: int = 1
+) -> Tuple[torch.tensor, List[str], List[str]]:
+    """
+    Extract index features using k-th text captions from a list of captions.
+
+    :param dataset: FashionIQ or CIRR dataset in 'classic' mode
+    :param clip_text_encoder: CLIP text encoder model
+    :param clip_tokenizer: CLIP tokenizer
+    :param text_captions: The list of text captions dictionaries from Large Language Model
+    :param k_th: The k-th text caption to use (1-indexed)
+    :return: a tensor of encoded text features, list of image names, and list of used captions
+    """
+
+    # Create a mapping from image names to k-th text caption
+    candidate_to_caption = {item['candidate']: item['captions'][k_th - 1]
+                            for item in text_captions if 'candidate' in item and 'captions' in item}
+
+    # Create DataLoader to iterate over the dataset
+    classic_val_loader = DataLoader(dataset=dataset, batch_size=32, num_workers=4, pin_memory=False, collate_fn=collate_fn)
+
+    # Initialize empty tensor for features, and lists for names and captions
+    index_features = torch.empty((0, clip_text_encoder.text_projection.out_features)).to(device, non_blocking=True)
+    index_names = []
+    used_captions = []
+
+    if isinstance(dataset, CIRRDataset):
+        print(f"[{datetime.now()}] extracting CIRR {dataset.split} index features with {k_th}-th text captions")
+    elif isinstance(dataset, FashionIQDataset):
+        print(f"[{datetime.now()}] extracting fashionIQ {dataset.dress_types} - {dataset.split} index features with {k_th}-th text captions")
+
+    # Process each batch
+    for names, _ in tqdm(classic_val_loader):
+        # Find the corresponding k-th captions using the names
+        batch_captions = [candidate_to_caption.get(name, "") for name in names]
+
+        # Encode the captions using CLIPT text encoder
+        with torch.no_grad():
+            # The Clip text encoder requires a tokenized input
+            text_tokens = clip_tokenizer(batch_captions, context_length=77).to(device, non_blocking=True)
+            text_features = clip_text_encoder(text_tokens, return_dict=False)[0]
 
         # Collect features, names, and captions
         index_features = torch.vstack((index_features, text_features))
@@ -190,6 +279,7 @@ def save_model(name: str, cur_epoch: int, model_to_save: nn.Module, training_pat
     :param cur_epoch: current epoch
     :param model_to_save: pytorch model to be saved
     :param training_path: path associated with the training run
+    :param optimizer: optimizer associated with the model
     """
     models_path = training_path / "saved_models"
     models_path.mkdir(exist_ok=True, parents=True)
