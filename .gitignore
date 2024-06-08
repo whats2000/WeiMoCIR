@@ -277,3 +277,4 @@ fashionIQ_dataset/image_splits
 
 # cache folder
 cache/
+plot/
