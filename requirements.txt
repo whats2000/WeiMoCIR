@@ -13,3 +13,7 @@ numpy~=1.24.4
 pillow~=10.3.0
 configobj~=5.0.8
 clip
+matplotlib
+seaborn
+jupyter
+IPython

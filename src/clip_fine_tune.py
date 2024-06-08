@@ -7,6 +7,9 @@
  * Original Authors: Cuberick-Orion
 """
 import os
+
+from src.validate import compute_fiq_val_metrics, compute_cirr_val_metrics
+
 '''
 Manually limiting the thread number for numpy
 this is recommended if your CPU has many threads
@@ -36,7 +39,6 @@ from tqdm import tqdm
 from data_utils import base_path, squarepad_transform, targetpad_transform, CIRRDataset, FashionIQDataset
 from utils import collate_fn, update_train_running_results, set_train_bar_description, extract_index_features, \
     save_model, generate_randomized_fiq_caption, element_wise_sum, device, cosine_lr_schedule
-from validate import compute_cirr_val_metrics, compute_fiq_val_metrics
 
 
 def blip_text_finetune_fiq(train_dress_types: List[str], val_dress_types: List[str],

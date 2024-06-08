@@ -479,14 +479,14 @@ def main():
 
     from transformers import CLIPTextModelWithProjection
 
-    clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float16)
+    clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32)
     clip_text_encoder = clip_text_encoder.float().to(device)
 
     print("clip text encoder loaded.")
     clip_text_encoder.eval()
 
     from transformers import CLIPVisionModelWithProjection
-    clip_img_encoder = CLIPVisionModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float16)
+    clip_img_encoder = CLIPVisionModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32)
 
     clip_img_encoder = clip_img_encoder.float().to(device)
     print("clip img encoder loaded.")
