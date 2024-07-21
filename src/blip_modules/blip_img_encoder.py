@@ -1,6 +1,13 @@
+"""
+ * Copyright (c) 2024
+ * All rights reserved.
+ * SPDX-License-Identifier: MIT
+ * This file incorporates code from the Bi-Blip4CIR project, available at:
+ * https://github.com/Cuberick-Orion/Bi-Blip4CIR
+ * For full license text of the original code, see the LICENSE file in the root of the Bi-Blip4CIR repo.
+"""
 import torch
 from torch import nn
-import torch.nn.functional as F
 
 from .vit import interpolate_pos_embed
 from .blip import create_vit

@@ -1,5 +1,5 @@
 """
- * Copyright (c) 2024 whats2000
+ * Copyright (c) 2024
  * All rights reserved.
  * SPDX-License-Identifier: MIT
  * This file incorporates code from the Bi-Blip4CIR project, available at:

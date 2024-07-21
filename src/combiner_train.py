@@ -1,6 +1,6 @@
 """
  * Copyright (c) 2024
- * SPDX-License-Identifier: [Original Project's License, e.g., MIT]
+ * SPDX-License-Identifier: MIT
  * This file is copied from the Bi-Blip4CIR project and remains under the same license.
  * Original authors and full license text can be found in the LICENSE file at:
  * https://github.com/Cuberick-Orion/Bi-Blip4CIR
