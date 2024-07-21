@@ -150,12 +150,13 @@ def compute_fiq_val_metrics_text_image(
     return recall_at10, recall_at50
 
 
-def generate_fiq_val_predictions(blip_text_encoder: torch.nn.Module,
-                                 relative_val_dataset: FashionIQDataset,
-                                 combining_function: callable,
-                                 index_names: List[str],
-                                 index_features: torch.tensor) -> \
-    Tuple[torch.tensor, List[str]]:
+def generate_fiq_val_predictions(
+    blip_text_encoder: torch.nn.Module,
+    relative_val_dataset: FashionIQDataset,
+    combining_function: callable,
+    index_names: List[str],
+    index_features: torch.tensor
+) -> Tuple[torch.tensor, List[str]]:
     """
     Compute FashionIQ predictions on the validation set
     :param blip_text_encoder: BLIP model
@@ -219,7 +220,6 @@ def fashioniq_val_retrieval(dress_type: str,
     :param blip_img_encoder: BLIP image model
     :param preprocess: preprocess pipeline
     """
-
     blip_text_encoder = blip_text_encoder.float().eval()
     blip_img_encoder = blip_img_encoder.float().eval()
 
@@ -446,6 +446,9 @@ def main():
     parser.add_argument("--combining-function", type=str, required=True,
                         help="Which combining function use, should be in ['combiner', 'sum']")
 
+    parser.add_argument("--blip-vit", default='base', type=str,
+                        help="BLIP model variant, should be in ['base', 'large']")
+
     parser.add_argument("--blip-pretrained-path", default='models/model_base.pth', type=str,
                         help="path of the BLIP pretrained model weights")
     parser.add_argument("--med-config-path", default='src/blip_modules/med_config.json', type=str,
@@ -467,20 +470,24 @@ def main():
     parser.add_argument("--text_captions_path", type=str, help="Path to the text captions for FashionIQ dataset")
     parser.add_argument("--alpha", default=0.5, type=float,
                         help="Weight for combining text and image distances, Close to 1 gives more weight to text")
-    parser.add_argument('--beta', default=-1, type=float, help='Weight for combining text and image features use element wise sum if set to 0 ~ 1')
+    parser.add_argument('--beta', default=-1, type=float,
+                        help='Weight for combining text and image features use element wise sum if set to 0 ~ 1')
 
     args = parser.parse_args()
 
     from blip_modules.blip_text_encoder import BLIPTextEncoder
     blip_text_encoder = BLIPTextEncoder(args.blip_pretrained_path, args.med_config_path,
-                                        use_pretrained_proj_layer=True)  # create BLIP text encoder, load pre-trained checkpoint
+                                        use_pretrained_proj_layer=True,
+                                        vit=args.blip_vit)  # create BLIP text encoder, load pre-trained checkpoint
     blip_text_encoder = blip_text_encoder.to(device)
     print("blip text encoder loaded.")
     blip_text_encoder.eval()
 
     from blip_modules.blip_img_encoder import BLIPImgEncoder
     blip_img_encoder = BLIPImgEncoder(
-        args.blip_pretrained_path)  # create BLIP text encoder, load pre-trained checkpoint
+        args.blip_pretrained_path,
+        args.blip_vit
+    )  # create BLIP text encoder, load pre-trained checkpoint
     blip_img_encoder = blip_img_encoder.to(device)
     print("blip img encoder loaded.")
     blip_img_encoder = blip_img_encoder.eval()
@@ -510,7 +517,9 @@ def main():
                 " to a trained Combiner. Such Combiner will not be used")
 
         if 1 >= args.beta >= 0:
-            combining_function = lambda image_features, text_features: element_wise_sum_with_beta(image_features, text_features, args.beta)
+            combining_function = lambda image_features, text_features: element_wise_sum_with_beta(image_features,
+                                                                                                  text_features,
+                                                                                                  args.beta)
         else:
             combining_function = element_wise_sum
     elif args.combining_function.lower() == 'combiner':

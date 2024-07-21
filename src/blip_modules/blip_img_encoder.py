@@ -41,17 +41,17 @@ def load_checkpoint(model,url_or_filename, prepend=''):
     return model,msg
 
 class BLIPImgEncoder(torch.nn.Module):
-    def __init__(self, pretrained_weight_path):
+    def __init__(self, pretrained_weight_path, vit='base'):
         """
         This is a simple instance of the BLIP image encoder.
         Most of the configs are hardcoded for simplicity following `retrieval_coco.yaml`.
 
         Args:
             pretrained_weight_path (str): path for the BLIP pretrained weights
+            vit (str): type of Vision Transformer to use, should be one of ['base', 'large']
         """               
         super().__init__()
 
-        vit = 'base'
         image_size = 384
         vit_grad_ckpt = True # do not use False
         vit_ckpt_layer = 4 # do not use 0 
