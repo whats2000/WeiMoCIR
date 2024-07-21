@@ -277,4 +277,9 @@ fashionIQ_dataset/image_splits
 
 # cache folder
 cache/
+
+# plot folder
 plot/
+
+# report folder
+report/
