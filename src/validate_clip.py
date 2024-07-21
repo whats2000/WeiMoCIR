@@ -48,9 +48,6 @@ def compute_fiq_val_metrics(relative_val_dataset: FashionIQDataset,
                                                                     clip_tokenizer,
                                                                     relative_val_dataset,
                                                                     combining_function, index_names, index_features)
-
-    print(f"[{datetime.now()}] Compute FashionIQ {relative_val_dataset.dress_types} validation metrics")
-
     # Normalize the index features
     index_features = F.normalize(index_features, dim=-1).float()
 
