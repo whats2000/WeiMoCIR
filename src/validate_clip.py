@@ -174,8 +174,6 @@ def generate_fiq_val_predictions(clip_text_encoder: torch.nn.Module,
     :param index_names: validation index names
     :return: predicted features and target names
     """
-    print(f"[{datetime.now()}] Compute FashionIQ {relative_val_dataset.dress_types} validation predictions")
-
     relative_val_loader = DataLoader(dataset=relative_val_dataset, batch_size=32,
                                      num_workers=4, pin_memory=False, collate_fn=collate_fn,
                                      shuffle=False)
