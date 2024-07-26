@@ -457,7 +457,7 @@ def main():
     parser.add_argument("--dataset", type=str, required=True, help="should be either 'CIRR' or 'fashionIQ'")
 
     parser.add_argument("--clip_name", type=str,
-                        help="Name of the CLIP model should be in like ['openai/clip-vit-large-patch14', 'laion/CLIP-ViT-H-14-laion2B-s32B-b79K', 'Geonmo/CLIP-Giga-config-fixed']")
+                        help="Name of the CLIP model should be in like ['laion/CLIP-ViT-L-14-laion2B-s32B-b82K', 'laion/CLIP-ViT-H-14-laion2B-s32B-b79K', 'Geonmo/CLIP-Giga-config-fixed']")
 
     parser.add_argument("--clip-model-path", type=Path, help="Path to the fine-tuned CLIP model")
 
@@ -474,14 +474,20 @@ def main():
 
     from transformers import CLIPTextModelWithProjection
 
-    clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32)
+    if args.clip_name == 'laion/CLIP-ViT-L-14-laion2B-s32B-b82K':
+        clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32, projection_dim=768)
+    else:
+        clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32)
     clip_text_encoder = clip_text_encoder.float().to(device)
 
     print("clip text encoder loaded.")
     clip_text_encoder.eval()
 
     from transformers import CLIPVisionModelWithProjection
-    clip_img_encoder = CLIPVisionModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32)
+    if args.clip_name == 'laion/CLIP-ViT-L-14-laion2B-s32B-b82K':
+        clip_img_encoder = CLIPVisionModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32, projection_dim=768)
+    else:
+        clip_img_encoder = CLIPVisionModelWithProjection.from_pretrained(args.clip_name, torch_dtype=torch.float32)
 
     clip_img_encoder = clip_img_encoder.float().to(device)
     print("clip img encoder loaded.")
