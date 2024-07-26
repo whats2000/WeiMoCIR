@@ -274,6 +274,8 @@ cirr_dataset/dev
 fashionIQ_dataset/images
 fashionIQ_dataset/captions
 fashionIQ_dataset/image_splits
+cirr_dataset/
+cirr_dataset/cirr/
 
 # cache folder
 cache/
