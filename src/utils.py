@@ -27,7 +27,7 @@ else:
 
 
 def extract_index_features(dataset: Union[CIRRDataset, FashionIQDataset], blip_model: nn.Module) -> \
-        Tuple[torch.tensor, List[str]]:
+        Tuple[torch.Tensor, List[str]]:
     """
     Extract FashionIQ or CIRR index features
     :param dataset: FashionIQ or CIRR dataset in 'classic' mode
@@ -55,7 +55,7 @@ def extract_index_features(dataset: Union[CIRRDataset, FashionIQDataset], blip_m
 
 
 def extract_index_features_clip(dataset: Union[CIRRDataset, FashionIQDataset], clip_model: nn.Module) -> \
-    Tuple[torch.tensor, List[str]]:
+    Tuple[torch.Tensor, List[str]]:
     """
     Extract FashionIQ or CIRR index features
     :param dataset: FashionIQ or CIRR dataset in 'classic' mode
@@ -95,7 +95,7 @@ def extract_index_features_with_text_captions(
     blip_text_encoder: nn.Module,
     text_captions: List[dict],
     k_th: int = 1
-) -> Tuple[torch.tensor, List[str], List[str]]:
+) -> Tuple[torch.Tensor, List[str], List[str]]:
     """
     Extract index features using k-th text captions from a list of captions.
 
@@ -145,7 +145,7 @@ def extract_index_features_with_text_captions_clip(
     clip_tokenizer,
     text_captions: List[dict],
     k_th: int = 1
-) -> Tuple[torch.tensor, List[str], List[str]]:
+) -> Tuple[torch.Tensor, List[str], List[str]]:
     """
     Extract index features using k-th text captions from a list of captions.
 
@@ -192,7 +192,7 @@ def extract_index_features_with_text_captions_clip(
 
     return index_features, index_names, used_captions
 
-def element_wise_sum(image_features: torch.tensor, text_features: torch.tensor) -> torch.tensor:
+def element_wise_sum(image_features: torch.Tensor, text_features: torch.Tensor) -> torch.Tensor:
     """
     Normalized element-wise sum of image features and text features
     :param image_features: non-normalized image features
@@ -201,7 +201,7 @@ def element_wise_sum(image_features: torch.tensor, text_features: torch.tensor) 
     """
     return F.normalize(image_features + text_features, dim=-1)
 
-def element_wise_sum_with_beta(image_features: torch.tensor, text_features: torch.tensor, beta=0.65) -> torch.tensor:
+def element_wise_sum_with_beta(image_features: torch.Tensor, text_features: torch.Tensor, beta=0.65) -> torch.Tensor:
     """
     Normalized element-wise sum of image features and text features
     :param image_features: non-normalized image features
@@ -246,7 +246,7 @@ def collate_fn(batch: list):
     return torch.utils.data.dataloader.default_collate(batch)
 
 
-def update_train_running_results(train_running_results: dict, loss: torch.tensor, images_in_batch: int):
+def update_train_running_results(train_running_results: dict, loss: torch.Tensor, images_in_batch: int):
     """
     Update `train_running_results` dict during training
     :param train_running_results: logging training dict
