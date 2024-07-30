@@ -534,7 +534,6 @@ def generate_cirr_val_predictions(
     :param index_names: validation index names
     :return: predicted features, reference names, target names and group members
     """
-    print(f"[{datetime.now()}] Compute CIRR validation predictions")
     relative_val_loader = DataLoader(
         dataset=relative_val_dataset,
         batch_size=32,
