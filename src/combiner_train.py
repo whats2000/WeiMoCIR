@@ -36,7 +36,7 @@ from data_utils import base_path, squarepad_transform, FashionIQDataset, targetp
 from combiner import Combiner
 from utils import collate_fn, update_train_running_results, set_train_bar_description, save_model, \
     extract_index_features, generate_randomized_fiq_caption, device
-from validate import compute_cirr_val_metrics, compute_fiq_val_metrics
+from src.validate import compute_cirr_val_metrics, compute_fiq_val_metrics
 
 
 def combiner_training_fiq(train_dress_types: List[str], val_dress_types: List[str],

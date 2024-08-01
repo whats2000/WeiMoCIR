@@ -29,7 +29,7 @@ from utils import extract_index_features, collate_fn, element_wise_sum, device, 
 def compute_fiq_val_metrics(
     relative_val_dataset: FashionIQDataset,
     clip_text_encoder: torch.nn.Module,
-    clip_tokenizer,
+    clip_tokenizer: callable,
     index_features: torch.tensor,
     index_names: List[str],
     combining_function: callable
@@ -38,6 +38,7 @@ def compute_fiq_val_metrics(
     Compute validation metrics on FashionIQ dataset
     :param relative_val_dataset: FashionIQ validation dataset in relative mode
     :param clip_text_encoder: CLIP model
+    :param clip_tokenizer: CLIP tokenizer
     :param index_features: validation index features
     :param index_names: validation index names
     :param combining_function: function which takes as input (image_features, text_features) and outputs the combined
@@ -77,7 +78,7 @@ def compute_fiq_val_metrics(
 def compute_fiq_val_metrics_text_image(
     relative_val_dataset: FashionIQDataset,
     clip_text_encoder: torch.nn.Module,
-    clip_tokenizer,
+    clip_tokenizer: callable,
     multiple_text_index_features: List[torch.tensor],
     multiple_text_index_names: List[List[str]],
     image_index_features: torch.tensor,
@@ -170,7 +171,7 @@ def compute_fiq_val_metrics_text_image(
 
 def generate_fiq_val_predictions(
     clip_text_encoder: torch.nn.Module,
-    clip_tokenizer,
+    clip_tokenizer: callable,
     relative_val_dataset: FashionIQDataset,
     combining_function: callable,
     index_names: List[str],
@@ -271,17 +272,16 @@ def fashioniq_val_retrieval_text_image(
     combining_function: callable,
     clip_text_encoder: torch.nn.Module,
     clip_img_encoder: torch.nn.Module,
-    clip_tokenizer,
+    clip_tokenizer: callable,
     text_captions: List[dict],
     alpha: float,
     preprocess: callable
-):
+) -> Tuple[float, float]:
     """
     Perform retrieval on FashionIQ validation set computing the metrics. To combine the features the `combining_function`
     is used
     :param dress_type: FashionIQ category on which perform the retrieval
-    :param combining_function:function which takes as input (image_features, text_features) and outputs the combined
-                            features
+    :param combining_function:function which takes as input (image_features, text_features) and outputs the combined features
     :param clip_text_encoder: CLIP text model
     :param clip_img_encoder: CLIP image model
     :param clip_tokenizer: CLIP tokenizer
@@ -412,7 +412,7 @@ def compute_cirr_val_metrics(
 def compute_cirr_val_metrics_text_image(
     relative_val_dataset: CIRRDataset,
     clip_text_encoder: torch.nn.Module,
-    clip_tokenizer,
+    clip_tokenizer: callable,
     multiple_text_index_features: List[torch.tensor],
     multiple_text_index_names: List[List[str]],
     image_index_features: torch.tensor,
@@ -522,7 +522,7 @@ def compute_cirr_val_metrics_text_image(
 
 def generate_cirr_val_predictions(
     clip_text_encoder: torch.nn.Module,
-    clip_tokenizer,
+    clip_tokenizer: callable,
     relative_val_dataset: CIRRDataset,
     combining_function: callable,
     index_names: List[str],
@@ -588,12 +588,11 @@ def cirr_val_retrieval(
     clip_img_encoder: torch.nn.Module,
     clip_tokenizer: callable,
     preprocess: callable
-):
+) -> Tuple[float, float, float, float, float, float, float]:
     """
     Perform retrieval on CIRR validation set computing the metrics. To combine the features the `combining_function`
     is used
-    :param combining_function: function which takes as input (image_features, text_features) and outputs the combined
-                            features
+    :param combining_function: function which takes as input (image_features, text_features) and outputs the combined  features
     :param clip_text_encoder: CLIP text model
     :param clip_img_encoder: CLIP image model
     :param clip_tokenizer: CLIP tokenizer

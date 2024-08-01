@@ -660,7 +660,7 @@ def cirr_val_retrieval_text_image(
         image_index_features,
         image_index_names,
         combining_function,
-        alpha
+        alpha,
     )
 
 
