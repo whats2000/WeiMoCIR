@@ -20,11 +20,10 @@ from tqdm import tqdm
 
 from data_utils import CIRRDataset, targetpad_transform, base_path
 from src.utils import (
-    extract_index_features,
     extract_index_features_with_text_captions_clip,
     element_wise_sum,
     element_wise_sum_with_beta,
-    device,
+    device, extract_index_features_clip,
 )
 
 
@@ -69,7 +68,7 @@ def generate_cirr_test_submissions_text_image(
         multiple_index_features.append(index_features)
         multiple_index_names.append(index_names)
 
-    image_index_features, image_index_names = extract_index_features(classic_test_dataset, clip_img_encoder)
+    image_index_features, image_index_names = extract_index_features_clip(classic_test_dataset, clip_img_encoder)
 
     relative_test_dataset = CIRRDataset('test1', 'relative', preprocess)
 
@@ -293,7 +292,7 @@ def main():
 
     parser.add_argument("--clip-model-path", type=Path, help="Path to the fine-tuned CLIP model")
 
-    parser.add_argument("--transform", default="targetpad", type=str,
+    parser.add_argument("--transform", default="clip", type=str,
                         help="Preprocess pipeline, should be in ['clip', 'squarepad', 'targetpad'] ")
 
     parser.add_argument("--text_captions_path", type=str, help="Path to the text captions for FashionIQ dataset")
