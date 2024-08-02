@@ -249,7 +249,7 @@ def generate_cirr_test_predictions(
 
     # Initialize pairs_id, predicted_features, group_members and reference_names
     pairs_id = []
-    predicted_features = torch.empty((0, 256)).to(device, non_blocking=True)
+    predicted_features = torch.empty((0, clip_text_encoder.text_projection.out_features)).to(device, non_blocking=True)
     group_members = []
     reference_names = []
 
