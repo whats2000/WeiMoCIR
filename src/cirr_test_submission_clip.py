@@ -390,6 +390,7 @@ def main():
 
         generate_cirr_test_submissions_text_image(
             combining_function,
+            args.submission_name,
             clip_text_encoder,
             clip_img_encoder,
             clip_tokenizer,
