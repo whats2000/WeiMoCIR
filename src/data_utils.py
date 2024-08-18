@@ -120,7 +120,15 @@ class FashionIQDataset(Dataset):
     The dataset manage an arbitrary numbers of FashionIQ category, e.g. only dress, dress+toptee+shirt, dress+shirt...
     """
 
-    def __init__(self, split: str, dress_types: List[str], mode: str, preprocess: callable, **kwargs):
+    def __init__(
+        self,
+        split: str,
+        dress_types: List[str],
+        mode: str,
+        preprocess: callable,
+        no_print_output: bool = False,
+        **kwargs
+    ):
         """
         :param split: dataset split, should be in ['test', 'train', 'val']
         :param dress_types: list of fashionIQ category
@@ -160,7 +168,8 @@ class FashionIQDataset(Dataset):
             with open(base_path / 'fashionIQ_dataset' / 'image_splits' / f'split.{dress_type}.{split}.json') as f:
                 self.image_names.extend(json.load(f))
 
-        print(f"FashionIQ {split} - {dress_types} dataset in {mode} mode initialized")
+        if not no_print_output:
+            print(f"FashionIQ {split} - {dress_types} dataset in {mode} mode initialized")
 
 
     def __prepend_text__(self, text, forward: bool):

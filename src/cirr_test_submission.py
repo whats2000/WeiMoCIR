@@ -22,7 +22,7 @@ from tqdm import tqdm
 from src.utils import extract_index_features, extract_index_features_with_text_captions
 from data_utils import CIRRDataset, targetpad_transform, squarepad_transform, base_path
 from combiner import Combiner
-from utils import element_wise_sum, device, element_wise_sum_with_beta
+from utils import element_wise_sum, device, element_wise_sum_with_alpha
 
 
 def generate_cirr_test_submissions(
@@ -37,7 +37,7 @@ def generate_cirr_test_submissions(
    :param combining_function: function which takes as input (image_features, text_features) and outputs the combined features
    :param file_name: file_name of the submission
    :param blip_text_encoder: BLIP model
-   :param blip_img_encoder: BLIP model
+   :param blip_img_encoder:
    :param preprocess: preprocess pipeline
    """
 
@@ -70,7 +70,7 @@ def generate_cirr_test_submissions(
     submission.update(pairid_to_predictions)
     group_submission.update(pairid_to_group_predictions)
 
-    # Define submission path
+    # Define the submission path
     submissions_folder_path = base_path / "submission" / 'CIRR'
     submissions_folder_path.mkdir(exist_ok=True, parents=True)
 
@@ -88,7 +88,7 @@ def generate_cirr_test_submissions_text_image(
     blip_text_encoder: torch.nn.Module,
     blip_img_encoder: torch.nn.Module,
     text_captions: List[dict],
-    alpha: float,
+    beta: float,
     preprocess: callable,
 ):
     """
@@ -99,7 +99,7 @@ def generate_cirr_test_submissions_text_image(
     :param blip_text_encoder: BLIP text model
     :param blip_img_encoder: BLIP image model
     :param text_captions: text captions for CIRR dataset
-    :param alpha: weight for combining text and image distances
+    :param beta: weight for combining text and image distances
     :param preprocess: preprocess pipeline
     """
     blip_text_encoder = blip_text_encoder.float().eval()
@@ -133,7 +133,7 @@ def generate_cirr_test_submissions_text_image(
         image_index_features,
         image_index_names,
         combining_function,
-        alpha,
+        beta,
     )
 
     submission = {
@@ -148,7 +148,7 @@ def generate_cirr_test_submissions_text_image(
     submission.update(pairid_to_predictions)
     group_submission.update(pairid_to_group_predictions)
 
-    # Define submission path
+    # Define the submission path
     submissions_folder_path = base_path / "submission" / 'CIRR'
     submissions_folder_path.mkdir(exist_ok=True, parents=True)
 
@@ -230,7 +230,7 @@ def generate_cirr_test_dicts_text_image(
     image_index_features: torch.Tensor,
     image_index_names: List[str],
     combining_function: callable,
-    alpha: float,
+    beta: float,
 ) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
     """
     Compute test prediction dicts for CIRR dataset
@@ -241,7 +241,7 @@ def generate_cirr_test_dicts_text_image(
     :param image_index_features: test image index features
     :param image_index_names: test image index names
     :param combining_function: function which takes as input (image_features, text_features) and outputs the combined features
-    :param alpha: weight for combining text and image distances
+    :param beta: weight for combining text and image distances
     :return: Top50 global and Top3 subset prediction for each query (reference_name, caption)
     """
     all_text_distances = []
@@ -288,7 +288,7 @@ def generate_cirr_test_dicts_text_image(
     merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
 
     # Merge text and image distances
-    merged_distances = alpha * merged_text_distances + (1 - alpha) * image_distances
+    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
 
     # Sort the results
     sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
@@ -374,7 +374,9 @@ def generate_cirr_test_predictions(
             else:
                 reference_image_features = torch.stack(
                     itemgetter(*batch_reference_names)(name_to_feat)
-                )  # To avoid unnecessary computation retrieve the reference image features directly from the index features
+                )
+                # To avoid unnecessary computation,
+                # retrieve the reference image features directly from the index features
             batch_predicted_features = combining_function(reference_image_features, text_features)
 
         predicted_features = torch.vstack((predicted_features, F.normalize(batch_predicted_features, dim=-1)))
@@ -414,9 +416,9 @@ def main():
     parser.add_argument("--feature-dim", default=256, type=int,
                         help="Feature dimension as input to combiner. Default: inherited from clip_model.visual.output_dim")
     parser.add_argument("--text_captions_path", type=str, help="Path to the text captions for FashionIQ dataset")
-    parser.add_argument("--alpha", default=0.5, type=float,
+    parser.add_argument("--beta", default=0.5, type=float,
                         help="Weight for combining text and image distances, Close to 1 gives more weight to text")
-    parser.add_argument('--beta', default=-1, type=float,
+    parser.add_argument('--alpha', default=-1, type=float,
                         help='Weight for combining text and image features use element wise sum if set to 0 ~ 1')
 
     args = parser.parse_args()
@@ -467,11 +469,11 @@ def main():
             warnings.warn(
                 "Be careful, you are using the element-wise sum as combining_function but you have also passed a path"
                 " to a trained Combiner. Such Combiner will not be used")
-        if 1 >= args.beta >= 0:
-            combining_function = lambda image_features, text_features: element_wise_sum_with_beta(
+        if 1 >= args.alpha >= 0:
+            combining_function = lambda image_features, text_features: element_wise_sum_with_alpha(
                 image_features,
                 text_features,
-                args.beta
+                args.alpha
             )
         else:
             combining_function = element_wise_sum
@@ -488,7 +490,7 @@ def main():
         with open(args.text_captions_path, 'r') as f:
             text_captions = json.load(f)
 
-        print('Running CIRR validation with text and image distances combined with alpha =', args.alpha)
+        print('Running CIRR validation with text and image distances combined with beta =', args.beta)
 
         generate_cirr_test_submissions_text_image(
                 combining_function,
@@ -496,7 +498,7 @@ def main():
                 blip_text_encoder,
                 blip_img_encoder,
                 text_captions,
-                args.alpha,
+                args.beta,
                 preprocess
             )
     else:

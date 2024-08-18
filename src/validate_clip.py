@@ -21,9 +21,9 @@ from rich import print
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from data_utils import FashionIQDataset, targetpad_transform, CIRRDataset
-from utils import extract_index_features, collate_fn, element_wise_sum, device, \
-    extract_index_features_with_text_captions_clip, element_wise_sum_with_beta, extract_index_features_clip
+from src.data_utils import FashionIQDataset, targetpad_transform, CIRRDataset
+from src.utils import extract_index_features, collate_fn, element_wise_sum, device, \
+    extract_index_features_with_text_captions_clip, element_wise_sum_with_alpha, extract_index_features_clip
 
 
 def compute_fiq_val_metrics(
@@ -84,7 +84,7 @@ def compute_fiq_val_metrics_text_image(
     image_index_features: torch.tensor,
     image_index_names: List[str],
     combining_function: callable,
-    alpha: float
+    beta: float
 ) -> Tuple[float, float]:
     """
     Compute validation metrics on FashionIQ dataset combining text and image distances.
@@ -97,7 +97,7 @@ def compute_fiq_val_metrics_text_image(
     :param image_index_features: validation image index features
     :param image_index_names: validation image index names
     :param combining_function: function that combines features
-    :param alpha: weight for combining text and image distances
+    :param beta: weight for combining text and image distances
     :return: the computed validation metrics
     """
     all_text_distances = []
@@ -144,7 +144,7 @@ def compute_fiq_val_metrics_text_image(
     merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
 
     # Merge text and image distances
-    merged_distances = alpha * merged_text_distances + (1 - alpha) * image_distances
+    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
 
     # Sort the results
     sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
@@ -222,7 +222,9 @@ def generate_fiq_val_predictions(
             else:
                 reference_image_features = torch.stack(
                     itemgetter(*reference_names)(name_to_feat)
-                )  # To avoid unnecessary computation retrieve the reference image features directly from the index features
+                )
+                # To avoid unnecessary computation,
+                # retrieve the reference image features directly from the index features
             batch_predicted_features = combining_function(reference_image_features, text_features)
 
         predicted_features = torch.vstack((predicted_features, F.normalize(batch_predicted_features, dim=-1)))
@@ -239,7 +241,7 @@ def fashioniq_val_retrieval(
     preprocess: callable
 ):
     """
-    Perform retrieval on FashionIQ validation set computing the metrics. To combine the features the `combining_function`
+    Perform retrieval on FashionIQ validation set computing the metrics. To combine the features, the `combining_function`
     is used
     :param dress_type: FashionIQ category on which perform the retrieval
     :param combining_function:function which takes as input (image_features, text_features) and outputs the combined
@@ -274,11 +276,11 @@ def fashioniq_val_retrieval_text_image(
     clip_img_encoder: torch.nn.Module,
     clip_tokenizer: callable,
     text_captions: List[dict],
-    alpha: float,
+    beta: float,
     preprocess: callable
 ) -> Tuple[float, float]:
     """
-    Perform retrieval on FashionIQ validation set computing the metrics. To combine the features the `combining_function`
+    Perform retrieval on FashionIQ validation set computing the metrics. To combine the features, the `combining_function`
     is used
     :param dress_type: FashionIQ category on which perform the retrieval
     :param combining_function:function which takes as input (image_features, text_features) and outputs the combined features
@@ -286,7 +288,7 @@ def fashioniq_val_retrieval_text_image(
     :param clip_img_encoder: CLIP image model
     :param clip_tokenizer: CLIP tokenizer
     :param text_captions: text captions for the FashionIQ dataset
-    :param alpha: weight for combining text and image distances
+    :param beta: weight for combining text and image distances
     :param preprocess: preprocess pipeline
     """
     clip_text_encoder = clip_text_encoder.float().eval()
@@ -321,7 +323,7 @@ def fashioniq_val_retrieval_text_image(
         image_index_features,
         image_index_names,
         combining_function,
-        alpha
+        beta
     )
 
 
@@ -418,7 +420,7 @@ def compute_cirr_val_metrics_text_image(
     image_index_features: torch.tensor,
     image_index_names: List[str],
     combining_function: callable,
-    alpha: float,
+    beta: float,
 ) -> Tuple[float, float, float, float, float, float, float]:
     all_text_distances = []
     reference_names = None
@@ -466,7 +468,7 @@ def compute_cirr_val_metrics_text_image(
     merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
 
     # Merge text and image distances
-    merged_distances = alpha * merged_text_distances + (1 - alpha) * image_distances
+    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
 
     # Sort the results
     sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
@@ -571,7 +573,9 @@ def generate_cirr_val_predictions(
             else:
                 reference_image_features = torch.stack(
                     itemgetter(*batch_reference_names)(name_to_feat)
-                )  # To avoid unnecessary computation retrieve the reference image features directly from the index features
+                )
+                # To avoid unnecessary computation,
+                # retrieve the reference image features directly from the index features
             batch_predicted_features = combining_function(reference_image_features, text_features)
 
         predicted_features = torch.vstack((predicted_features, F.normalize(batch_predicted_features, dim=-1)))
@@ -590,9 +594,9 @@ def cirr_val_retrieval(
     preprocess: callable
 ) -> Tuple[float, float, float, float, float, float, float]:
     """
-    Perform retrieval on CIRR validation set computing the metrics. To combine the features the `combining_function`
+    Perform retrieval on CIRR validation set computing the metrics. To combine the features, the `combining_function`
     is used
-    :param combining_function: function which takes as input (image_features, text_features) and outputs the combined  features
+    :param combining_function: function which takes as input (image_features, text_features) and outputs the combined features
     :param clip_text_encoder: CLIP text model
     :param clip_img_encoder: CLIP image model
     :param clip_tokenizer: CLIP tokenizer
@@ -622,7 +626,7 @@ def cirr_val_retrieval_text_image(
     clip_img_encoder: torch.nn.Module,
     clip_tokenizer: callable,
     text_captions: List[dict],
-    alpha: float,
+    beta: float,
     preprocess: callable
 ) -> Tuple[float, float, float, float, float, float, float]:
     """
@@ -633,7 +637,7 @@ def cirr_val_retrieval_text_image(
     :param clip_img_encoder: CLIP image model
     :param clip_tokenizer: CLIP tokenizer
     :param text_captions: text captions for the CIRR dataset
-    :param alpha: weight for combining text and image distances
+    :param beta: weight for combining text and image distances
     :param preprocess: preprocess pipeline
     """
     clip_text_encoder = clip_text_encoder.float().eval()
@@ -668,7 +672,7 @@ def cirr_val_retrieval_text_image(
         image_index_features,
         image_index_names,
         combining_function,
-        alpha
+        beta
     )
 
 
@@ -685,10 +689,10 @@ def main():
                         help="Preprocess pipeline to use")
 
     parser.add_argument("--text_captions_path", type=str, help="Path to the text captions for FashionIQ dataset")
-    parser.add_argument("--alpha", default=0.5, type=float,
-                        help="Weight for combining text and image distances, Close to 1 gives more weight to text")
-    parser.add_argument('--beta', default=-1, type=float,
+    parser.add_argument('--alpha', default=-1, type=float,
                         help='Weight for combining text and image features use element wise sum if set to 0 ~ 1')
+    parser.add_argument("--beta", default=0.5, type=float,
+                        help="Weight for combining text and image distances, Close to 1 gives more weight to text")
 
     args = parser.parse_args()
 
@@ -761,11 +765,11 @@ def main():
 
     clip_tokenizer = tokenize
 
-    if 1 >= args.beta >= 0:
-        combining_function = lambda image_features, text_features: element_wise_sum_with_beta(
+    if 1 >= args.alpha >= 0:
+        combining_function = lambda image_features, text_features: element_wise_sum_with_alpha(
             image_features,
             text_features,
-            args.beta
+            args.alpha
         )
     else:
         combining_function = element_wise_sum
@@ -775,7 +779,7 @@ def main():
             with open(args.text_captions_path, 'r') as f:
                 text_captions = json.load(f)
 
-            print('Running CIRR validation with text and image distances combined with alpha =', args.alpha)
+            print('Running CIRR validation with text and image distances combined with beta =', args.beta)
 
             group_recall_at1, group_recall_at2, group_recall_at3, recall_at1, recall_at5, recall_at10, recall_at50 = \
                 cirr_val_retrieval_text_image(
@@ -784,7 +788,7 @@ def main():
                     clip_img_encoder,
                     clip_tokenizer,
                     text_captions,
-                    args.alpha,
+                    args.beta,
                     preprocess
                 )
         else:
@@ -806,7 +810,7 @@ def main():
             with open(args.text_captions_path, 'r') as f:
                 text_captions = json.load(f)
 
-            print('Running FashionIQ validation with text and image distances combined with alpha =', args.alpha)
+            print('Running FashionIQ validation with text and image distances combined with beta =', args.beta)
 
             shirt_recallat10, shirt_recallat50 = fashioniq_val_retrieval_text_image(
                 'shirt',
@@ -815,7 +819,7 @@ def main():
                 clip_img_encoder,
                 clip_tokenizer,
                 text_captions,
-                args.alpha,
+                args.beta,
                 preprocess
             )
             average_recall10_list.append(shirt_recallat10)
@@ -828,7 +832,7 @@ def main():
                 clip_img_encoder,
                 clip_tokenizer,
                 text_captions,
-                args.alpha,
+                args.beta,
                 preprocess
             )
 
@@ -842,7 +846,7 @@ def main():
                 clip_img_encoder,
                 clip_tokenizer,
                 text_captions,
-                args.alpha,
+                args.beta,
                 preprocess
             )
             average_recall10_list.append(toptee_recallat10)
