@@ -30,7 +30,7 @@ def compute_fiq_val_metrics(
     relative_val_dataset: FashionIQDataset,
     clip_text_encoder: torch.nn.Module,
     clip_tokenizer: callable,
-    index_features: torch.tensor,
+    index_features: torch.Tensor,
     index_names: List[str],
     combining_function: callable
 ) -> Tuple[float, float]:
@@ -81,7 +81,7 @@ def compute_fiq_val_metrics_text_image(
     clip_tokenizer: callable,
     multiple_text_index_features: List[torch.tensor],
     multiple_text_index_names: List[List[str]],
-    image_index_features: torch.tensor,
+    image_index_features: torch.Tensor,
     image_index_names: List[str],
     combining_function: callable,
     beta: float
@@ -175,16 +175,19 @@ def generate_fiq_val_predictions(
     relative_val_dataset: FashionIQDataset,
     combining_function: callable,
     index_names: List[str],
-    index_features: torch.tensor
+    index_features: torch.Tensor,
+    no_print_output: bool = False,
 ) -> Tuple[torch.tensor, List[str]]:
     """
     Compute FashionIQ predictions on the validation set
+
     :param clip_text_encoder: CLIP model
     :param clip_tokenizer: CLIP tokenizer
     :param relative_val_dataset: FashionIQ validation dataset in relative mode
     :param combining_function: function which takes as input (image_features, text_features) and outputs the combined features
     :param index_features: validation index features
     :param index_names: validation index names
+    :param no_print_output: whether to print the output
     :return: predicted features and target names
     """
     relative_val_loader = DataLoader(
@@ -193,7 +196,7 @@ def generate_fiq_val_predictions(
         num_workers=4,
         pin_memory=False,
         collate_fn=collate_fn,
-        shuffle=False
+        shuffle=False,
     )
 
     # Get a mapping from index names to index features
@@ -203,7 +206,10 @@ def generate_fiq_val_predictions(
     predicted_features = torch.empty((0, clip_text_encoder.text_projection.out_features)).to(device, non_blocking=True)
     target_names = []
 
-    for reference_names, batch_target_names, captions in tqdm(relative_val_loader):  # Load data
+    if not no_print_output:
+        relative_val_loader = tqdm(relative_val_loader)
+
+    for reference_names, batch_target_names, captions in relative_val_loader:
         # Concatenate the captions in a deterministic way
         flattened_captions: list = np.array(captions).T.flatten().tolist()
         input_captions = [
@@ -331,7 +337,7 @@ def compute_cirr_val_metrics(
     relative_val_dataset: CIRRDataset,
     clip_model: torch.nn.Module,
     clip_tokenizer: callable,
-    index_features: torch.tensor,
+    index_features: torch.Tensor,
     index_names: List[str],
     combining_function: callable
 ) -> Tuple[float, float, float, float, float, float, float]:
@@ -417,7 +423,7 @@ def compute_cirr_val_metrics_text_image(
     clip_tokenizer: callable,
     multiple_text_index_features: List[torch.tensor],
     multiple_text_index_names: List[List[str]],
-    image_index_features: torch.tensor,
+    image_index_features: torch.Tensor,
     image_index_names: List[str],
     combining_function: callable,
     beta: float,
@@ -528,7 +534,7 @@ def generate_cirr_val_predictions(
     relative_val_dataset: CIRRDataset,
     combining_function: callable,
     index_names: List[str],
-    index_features: torch.tensor
+    index_features: torch.Tensor,
 ) -> Tuple[torch.tensor, List[str], List[str], List[List[str]]]:
     """
     Compute CIRR predictions on the validation set

@@ -56,6 +56,62 @@ def prepare_and_plot_recall_pivot(data: pd.DataFrame, title: str):
     plt.show()
 
 
+def filter_data_by_scale(data: pd.DataFrame, scale: float):
+    """
+    Filter the data to include only rows and columns that match the given scale (formatted to 2 decimal places).
+
+    :param data: Original data
+    :param scale: The scale to filter by (e.g., 0.1)
+    :return: Filtered data
+    """
+    # Convert index and columns to formatted strings
+    data.index = [f"{float(idx):.2f}" for idx in data.index]
+    data.columns = [f"{float(col):.2f}" for col in data.columns]
+
+    # Create a list of formatted strings that match the desired scale
+    scale_values = [f"{i * scale:.2f}" for i in range(int(1 / scale) + 1)]
+
+    # Filter rows and columns by the formatted scale values
+    filtered_data = data.loc[data.index.isin(scale_values), data.columns.isin(scale_values)]
+
+    return filtered_data
+
+
+def filter_and_plot_recall_pivot(
+    data: pd.DataFrame,
+    title: str,
+    font_size: int = 16,
+    annot_font_size: int = 14,
+    filter_scale: float = 0.1,
+):
+    """
+    Prepare and plot a pivot table for recall@10 or recall@50.
+
+    :param data: Pivot table data
+    :param title: plot title
+    :param font_size: Font size for the title and axis labels
+    :param annot_font_size: Font size for the annotations in the heatmap
+    :param filter_scale: Scale to filter the data by
+    """
+    data = filter_data_by_scale(data, filter_scale)
+
+    data.index = [f"{float(idx):.2f}" for idx in data.index]
+    data.columns = [f"{float(col):.2f}" for col in data.columns]
+
+    plt.figure(figsize=(8, 8), dpi=300)  # Adjust figure size and resolution
+    sns.heatmap(data, annot=True, fmt=".2f", cmap="magma", vmin=0, vmax=100,
+                cbar_kws={'format': '%.2f'}, annot_kws={"size": annot_font_size})
+    plt.title(title, fontsize=font_size)
+    plt.xlabel('Alpha', fontsize=font_size)
+    plt.ylabel('Beta', fontsize=font_size)
+    plt.xticks(rotation=45, fontsize=font_size)
+    plt.yticks(rotation=0, fontsize=font_size)
+
+    plt.tight_layout()
+    plt.savefig("heatmap.png", bbox_inches='tight', dpi=300)
+    plt.show()
+
+
 def prepare_ground_truths(json_data) -> dict:
     """
     Prepare ground truth data from the JSON structure.
