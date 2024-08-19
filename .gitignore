@@ -288,3 +288,6 @@ report/
 auxil/
 
 submission/CIRR/
+
+src/fashioniq_experiment/clip/*.csv
+src/fashioniq_experiment/blip/*.json
