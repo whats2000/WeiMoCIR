@@ -6,8 +6,8 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 from matplotlib import pyplot as plt
-import seaborn as sns
 from matplotlib.gridspec import GridSpec
+import seaborn as sns
 
 
 def convert_to_pivot_fiq(data: List[pd.DataFrame]) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -232,7 +232,7 @@ def found_better_than_original(
     return better_indices
 
 
-def element_wise_sum_original(image_features: torch.tensor, text_features: torch.tensor) -> torch.tensor:
+def element_wise_sum_original(image_features: torch.Tensor, text_features: torch.Tensor) -> torch.Tensor:
     """
     Normalized element-wise sum of image features and text features
     :param image_features: non-normalized image features
@@ -242,7 +242,7 @@ def element_wise_sum_original(image_features: torch.tensor, text_features: torch
     return F.normalize(image_features + text_features, dim=-1)
 
 
-def element_wise_sum(image_features: torch.tensor, text_features: torch.tensor, alpha=0.65) -> torch.tensor:
+def element_wise_sum(image_features: torch.Tensor, text_features: torch.Tensor, alpha=0.65) -> torch.Tensor:
     """
     Normalized element-wise sum of image features and text features
     :param image_features: non-normalized image features
@@ -251,6 +251,7 @@ def element_wise_sum(image_features: torch.tensor, text_features: torch.tensor, 
     :return: normalized element-wise sum of image and text features
     """
     return F.normalize((1 - alpha) * image_features + alpha * text_features, dim=-1)
+
 
 def get_combing_function_with_alpha(alpha: float):
     """

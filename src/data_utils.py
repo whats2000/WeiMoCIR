@@ -13,6 +13,7 @@ from typing import List
 import PIL
 import PIL.Image
 import warnings
+
 warnings.simplefilter('ignore', PIL.Image.DecompressionBombWarning)
 # PIL.Image.MAX_IMAGE_PIXELS = None # to ignore DecompressionBombWarning, but will increase RAM usage
 
@@ -141,7 +142,7 @@ class FashionIQDataset(Dataset):
         :param preprocess: function which preprocesses the image
         """
         self.epoch_count = None
-        
+
         self.mode = mode
         self.dress_types = dress_types
         self.split = split
@@ -171,7 +172,6 @@ class FashionIQDataset(Dataset):
         if not no_print_output:
             print(f"FashionIQ {split} - {dress_types} dataset in {mode} mode initialized")
 
-
     def __prepend_text__(self, text, forward: bool):
         text_chunks = text.split("and")
         new_text_chunks = []
@@ -199,7 +199,7 @@ class FashionIQDataset(Dataset):
                     target_image_path = base_path / 'fashionIQ_dataset' / 'images' / f"{target_name}.png"
                     target_image = self.preprocess(PIL.Image.open(target_image_path))
 
-                    return reference_image, target_image, image_captions, negated_image_captions #ADD: negated_capations
+                    return reference_image, target_image, image_captions, negated_image_captions  # ADD: negated_capations
 
                 elif self.split == 'val':
                     target_name = self.triplets[index]['target']
@@ -241,7 +241,15 @@ class CIRRDataset(Dataset):
                 - (pair_id, reference_name, rel_caption, group_members) when split == test1
     """
 
-    def __init__(self, split: str, mode: str, preprocess: callable, use_sub=False, **kwargs):
+    def __init__(
+        self,
+        split: str,
+        mode: str,
+        preprocess: callable,
+        use_sub=False,
+        no_print_output=False,
+        **kwargs
+    ):
         """
         :param split: dataset split, should be in ['test', 'train', 'val']
         :param mode: dataset mode, should be in ['relative', 'classic']:
@@ -277,8 +285,8 @@ class CIRRDataset(Dataset):
         with open(base_path / 'cirr_dataset' / 'cirr' / 'image_splits' / f'split.rc2.{split}.json') as f:
             self.name_to_relpath = json.load(f)
 
-        print(f"CIRR {split} dataset in {mode} mode initialized")
-
+        if not no_print_output:
+            print(f"CIRR {split} dataset in {mode} mode initialized")
 
     def __prepend_text__(self, text, forward: bool):
         text_chunks = text.split("and")
@@ -291,7 +299,7 @@ class CIRRDataset(Dataset):
             new_text_chunks.append(t_)
         new_text = 'and'.join(new_text_chunks)
         return new_text
-    
+
     def __getitem__(self, index):
         try:
             if self.mode == 'relative':
