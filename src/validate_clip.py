@@ -535,6 +535,7 @@ def generate_cirr_val_predictions(
     combining_function: callable,
     index_names: List[str],
     index_features: torch.Tensor,
+    no_print_output: bool = False
 ) -> Tuple[torch.tensor, List[str], List[str], List[List[str]]]:
     """
     Compute CIRR predictions on the validation set
@@ -545,6 +546,7 @@ def generate_cirr_val_predictions(
     :param combining_function: function which takes as input (image_features, text_features) and outputs the combined features
     :param index_features: validation index features
     :param index_names: validation index names
+    :param no_print_output: whether to print the output
     :return: predicted features, reference names, target names and group members
     """
     relative_val_loader = DataLoader(
@@ -564,7 +566,10 @@ def generate_cirr_val_predictions(
     group_members = []
     reference_names = []
 
-    for batch_reference_names, batch_target_names, captions, batch_group_members in tqdm(relative_val_loader):  # Load data
+    if not no_print_output:
+        relative_val_loader = tqdm(relative_val_loader)
+
+    for batch_reference_names, batch_target_names, captions, batch_group_members in relative_val_loader:  # Load data
         # text_inputs = clip.tokenize(captions).to(device, non_blocking=True)
         batch_group_members = np.array(batch_group_members).T.tolist()
 
