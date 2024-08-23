@@ -290,4 +290,8 @@ auxil/
 submission/CIRR/
 
 src/fashioniq_experiment/clip/*.csv
-src/fashioniq_experiment/blip/*.json
+src/fashioniq_experiment/blip/*.csv
+src/cirr_experiment/clip/*.csv
+src/cirr_experiment/blip/*.csv
+src/fashioniq_experiment/*.png
+src/cirr_experiment/*.png

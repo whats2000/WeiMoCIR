@@ -94,38 +94,86 @@ def filter_data_by_scale(data: pd.DataFrame, scale: float):
     return filtered_data
 
 
-def filter_and_plot_recall_pivot(
-    data: pd.DataFrame,
-    title: str,
-    font_size: int = 16,
-    annot_font_size: int = 14,
+def filter_and_plot_comparison(
+    data1: pd.DataFrame,
+    data2: pd.DataFrame,
+    title1: str,
+    title2: str,
+    font_size: int = 14,
+    annot_font_size: int = 10,
     filter_scale: float = 0.1,
+    cmap: str = "magma",
+    vmin: float = 0,
+    vmax: float = 100,
 ):
     """
-    Prepare and plot a pivot table for recall@10 or recall@50.
+    Filter two datasets and plot them side by side for comparison.
 
-    :param data: Pivot table data
-    :param title: plot title
-    :param font_size: Font size for the title and axis labels
-    :param annot_font_size: Font size for the annotations in the heatmap
+    :param data1: First pivot table data
+    :param data2: Second pivot table data
+    :param title1: Plot title for the first dataset
+    :param title2: Plot title for the second dataset
+    :param font_size: Font size for the titles and axis labels
+    :param annot_font_size: Font size for the annotations in the heatmaps
     :param filter_scale: Scale to filter the data by
+    :param cmap: Color map for the heatmaps
+    :param vmin: Minimum value for the color scale
+    :param vmax: Maximum value for the color scale
     """
-    data = filter_data_by_scale(data, filter_scale)
+    data1 = filter_data_by_scale(data1, filter_scale)
+    data2 = filter_data_by_scale(data2, filter_scale)
 
-    data.index = [f"{float(idx):.2f}" for idx in data.index]
-    data.columns = [f"{float(col):.2f}" for col in data.columns]
+    # Convert indices and columns to formatted strings
+    data1.index = [f"{float(idx):.2f}" for idx in data1.index]
+    data1.columns = [f"{float(col):.2f}" for col in data1.columns]
 
-    plt.figure(figsize=(8, 8), dpi=300)  # Adjust figure size and resolution
-    sns.heatmap(data, annot=True, fmt=".2f", cmap="magma", vmin=0, vmax=100,
-                cbar_kws={'format': '%.2f'}, annot_kws={"size": annot_font_size})
-    plt.title(title, fontsize=font_size)
-    plt.xlabel('Alpha', fontsize=font_size)
-    plt.ylabel('Beta', fontsize=font_size)
-    plt.xticks(rotation=45, fontsize=font_size)
-    plt.yticks(rotation=0, fontsize=font_size)
+    data2.index = [f"{float(idx):.2f}" for idx in data2.index]
+    data2.columns = [f"{float(col):.2f}" for col in data2.columns]
 
-    plt.tight_layout()
-    plt.savefig("heatmap.png", bbox_inches='tight', dpi=300)
+    # Create figure with GridSpec to control layout
+    fig = plt.figure(figsize=(16, 8), dpi=300)
+    gs = GridSpec(1, 3, width_ratios=[1, 1, 0.05], figure=fig)
+
+    # Plot first heatmap
+    ax1 = fig.add_subplot(gs[0, 0])
+    sns.heatmap(
+        data1,
+        annot=True,
+        fmt=".2f",
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        cbar=False,
+        annot_kws={"size": annot_font_size},
+        ax=ax1
+    )
+    ax1.set_title(title1, fontsize=font_size * 1.5)
+    ax1.set_xlabel('Alpha', fontsize=font_size)
+    ax1.set_ylabel('Beta', fontsize=font_size)
+    ax1.tick_params(axis='x', rotation=45, labelsize=font_size)
+    ax1.tick_params(axis='y', rotation=0, labelsize=font_size)
+
+    # Plot second heatmap
+    ax2 = fig.add_subplot(gs[0, 1])
+    sns.heatmap(
+        data2,
+        annot=True,
+        fmt=".2f",
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        cbar=True,
+        cbar_ax=fig.add_subplot(gs[0, 2]),
+        cbar_kws={'format': '%.2f', 'shrink': 0.8},
+        annot_kws={"size": annot_font_size}, ax=ax2
+    )
+    ax2.set_title(title2, fontsize=font_size * 1.5)
+    ax2.set_xlabel('Alpha', fontsize=font_size)
+    ax2.set_ylabel('Beta', fontsize=font_size)
+    ax2.tick_params(axis='x', rotation=45, labelsize=font_size)
+    ax2.tick_params(axis='y', rotation=0, labelsize=font_size)
+
+    plt.savefig("comparison_heatmap.png", bbox_inches='tight', dpi=300)
     plt.show()
 
 
@@ -298,6 +346,7 @@ def element_wise_sum(image_features: torch.Tensor, text_features: torch.Tensor, 
     :return: normalized element-wise sum of image and text features
     """
     return F.normalize((1 - alpha) * image_features + alpha * text_features, dim=-1)
+
 
 def get_combing_function_with_alpha(alpha: float):
     """
