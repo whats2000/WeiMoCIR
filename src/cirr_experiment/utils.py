@@ -105,6 +105,7 @@ def filter_and_plot_comparison(
     cmap: str = "magma",
     vmin: float = 0,
     vmax: float = 100,
+    save_img_name: str = "comparison_heatmap.png"
 ):
     """
     Filter two datasets and plot them side by side for comparison.
@@ -119,6 +120,7 @@ def filter_and_plot_comparison(
     :param cmap: Color map for the heatmaps
     :param vmin: Minimum value for the color scale
     :param vmax: Maximum value for the color scale
+    :param save_img_name: Name of the image file to save
     """
     data1 = filter_data_by_scale(data1, filter_scale)
     data2 = filter_data_by_scale(data2, filter_scale)
@@ -173,7 +175,7 @@ def filter_and_plot_comparison(
     ax2.tick_params(axis='x', rotation=45, labelsize=font_size)
     ax2.tick_params(axis='y', rotation=0, labelsize=font_size)
 
-    plt.savefig("comparison_heatmap.png", bbox_inches='tight', dpi=300)
+    plt.savefig(save_img_name, bbox_inches='tight', dpi=300)
     plt.show()
 
 
