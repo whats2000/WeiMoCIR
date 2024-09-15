@@ -271,10 +271,12 @@ cirr_dataset/train
 cirr_dataset/cirr
 cirr_dataset/test1
 cirr_dataset/dev
+cirr_dataset/cirr/
 fashionIQ_dataset/images
 fashionIQ_dataset/captions
 fashionIQ_dataset/image_splits
-cirr_dataset/cirr/
+circo_dataset/annotations
+circo_dataset/COCO2017_unlabeled/
 
 # cache folder
 cache/
