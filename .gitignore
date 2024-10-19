@@ -273,6 +273,7 @@ cirr_dataset/test1
 cirr_dataset/dev
 cirr_dataset/cirr/
 fashionIQ_dataset/images
+fashionIQ_dataset/copy_image
 fashionIQ_dataset/captions
 fashionIQ_dataset/image_splits
 circo_dataset/annotations
