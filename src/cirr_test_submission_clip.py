@@ -313,6 +313,12 @@ def main():
             torch_dtype=torch.float32,
             projection_dim=768
         )
+    elif args.clip_name == 'laion/CLIP-ViT-B-32-laion2B-s34B-b79K':
+        clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(
+            args.clip_name,
+            torch_dtype=torch.float32,
+            projection_dim=512
+        )
     else:
         clip_text_encoder = CLIPTextModelWithProjection.from_pretrained(
             args.clip_name,
