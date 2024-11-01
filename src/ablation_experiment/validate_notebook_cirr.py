@@ -39,13 +39,13 @@ def compute_cirr_val_metrics_text_image_combinations(
     Returns:
         The computed validation metrics
     """
-    all_text_distances = []
+    all_text_similarities = []
     results = []
     reference_names = None
     target_names = None
     group_members = None
 
-    # Compute distances for individual text features
+    # Compute similarities for individual text features
     for text_features, text_names in zip(multiple_text_index_features, multiple_text_index_names):
         # Generate text predictions and normalize features
         predicted_text_features, reference_names, target_names, group_members = generate_cirr_val_predictions(
@@ -60,12 +60,11 @@ def compute_cirr_val_metrics_text_image_combinations(
         text_features = F.normalize(text_features, dim=-1)
         predicted_text_features = F.normalize(predicted_text_features, dim=-1)
 
-        # Compute cosine similarity and convert to distance
+        # Compute cosine similarity
         cosine_similarities = torch.mm(predicted_text_features, text_features.T)
-        distances = 1 - cosine_similarities
-        all_text_distances.append(distances)
+        all_text_similarities.append(cosine_similarities)
 
-    # Normalize and compute distances for image features if available
+    # Normalize and compute similarities for image features if available
     if image_index_features is not None and len(image_index_features) > 0:
         predicted_image_features, _, _, _ = generate_cirr_val_predictions(
             blip_text_encoder,
@@ -76,18 +75,18 @@ def compute_cirr_val_metrics_text_image_combinations(
             no_print_output=True,
         )
 
-        # Normalize and compute distances
+        # Normalize and compute similarities
         image_index_features = F.normalize(image_index_features, dim=-1).float()
-        image_distances = 1 - predicted_image_features @ image_index_features.T
+        image_similarities = predicted_image_features @ image_index_features.T
     else:
-        image_distances = torch.zeros_like(all_text_distances[0])
+        image_similarities = torch.zeros_like(all_text_similarities[0])
 
-    # Merge text distances
-    merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
+    # Merge text similarities
+    merged_text_similarities = torch.mean(torch.stack(all_text_similarities), dim=0)
 
-    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
+    merged_similarities = beta * merged_text_similarities + (1 - beta) * image_similarities
     # Sort the results
-    sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
+    sorted_indices = torch.argsort(merged_similarities, dim=-1, descending=True).cpu()
     sorted_index_names = np.array(
         image_index_names if image_index_names else multiple_text_index_names[0]
     )[sorted_indices]
@@ -172,13 +171,13 @@ def compute_cirr_val_metrics_text_image_combinations_clip(
     Returns:
         The computed validation metrics
     """
-    all_text_distances = []
+    all_text_similarities = []
     results = []
     reference_names = None
     target_names = None
     group_members = None
 
-    # Compute distances for individual text features
+    # Compute similarities for individual text features
     for text_features, text_names in zip(multiple_text_index_features, multiple_text_index_names):
         # Generate text predictions and normalize features
         predicted_text_features, reference_names, target_names, group_members = generate_cirr_val_predictions_clip(
@@ -194,12 +193,11 @@ def compute_cirr_val_metrics_text_image_combinations_clip(
         text_features = F.normalize(text_features, dim=-1)
         predicted_text_features = F.normalize(predicted_text_features, dim=-1)
 
-        # Compute cosine similarity and convert to distance
+        # Compute cosine similarity
         cosine_similarities = torch.mm(predicted_text_features, text_features.T)
-        distances = 1 - cosine_similarities
-        all_text_distances.append(distances)
+        all_text_similarities.append(cosine_similarities)
 
-    # Normalize and compute distances for image features if available
+    # Normalize and compute similarities for image features if available
     if image_index_features is not None and len(image_index_features) > 0:
         predicted_image_features, _, _, _ = generate_cirr_val_predictions_clip(
             clip_text_encoder,
@@ -211,18 +209,18 @@ def compute_cirr_val_metrics_text_image_combinations_clip(
             no_print_output=True,
         )
 
-        # Normalize and compute distances
+        # Normalize and compute similarities
         image_index_features = F.normalize(image_index_features, dim=-1).float()
-        image_distances = 1 - predicted_image_features @ image_index_features.T
+        image_similarities = predicted_image_features @ image_index_features.T
     else:
-        image_distances = torch.zeros_like(all_text_distances[0])
+        image_similarities = torch.zeros_like(all_text_similarities[0])
 
-    # Merge text distances
-    merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
+    # Merge text similarities
+    merged_text_similarities = torch.mean(torch.stack(all_text_similarities), dim=0)
 
-    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
+    merged_similarities = beta * merged_text_similarities + (1 - beta) * image_similarities
     # Sort the results
-    sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
+    sorted_indices = torch.argsort(merged_similarities, dim=-1, descending=True).cpu()
     sorted_index_names = np.array(
         image_index_names if image_index_names else multiple_text_index_names[0]
     )[sorted_indices]

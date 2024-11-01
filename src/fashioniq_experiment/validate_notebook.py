@@ -22,7 +22,7 @@ def compute_fiq_val_metrics_text_image_grid_search(
     combining_function: callable,
 ) -> pd.DataFrame:
     """
-    Compute validation metrics on FashionIQ dataset combining text and image distances.
+    Compute validation metrics on FashionIQ dataset combining text and image similarities.
     The only difference with the original function is that we grid search over beta values in the range [0, 1].
     And the return a store dataframe with the results.
 
@@ -35,12 +35,12 @@ def compute_fiq_val_metrics_text_image_grid_search(
     :param combining_function: function that combines features
     :return: the computed validation metrics
     """
-    all_text_distances = []
+    all_text_similarities = []
     results = []
     betas = np.arange(0, 1.05, 0.05)
     target_names = None
 
-    # Compute distances for individual text features
+    # Compute similarities for individual text features
     for text_features, text_names in zip(multiple_text_index_features, multiple_text_index_names):
         # Generate text predictions and normalize features
         predicted_text_features, target_names = generate_fiq_val_predictions(
@@ -55,12 +55,11 @@ def compute_fiq_val_metrics_text_image_grid_search(
         text_features = F.normalize(text_features, dim=-1)
         predicted_text_features = F.normalize(predicted_text_features, dim=-1)
 
-        # Compute cosine similarity and convert to distance
+        # Compute cosine similarity
         cosine_similarities = torch.mm(predicted_text_features, text_features.T)
-        distances = 1 - cosine_similarities
-        all_text_distances.append(distances)
+        all_text_similarities.append(cosine_similarities)
 
-    # Normalize and compute distances for image features if available
+    # Normalize and compute similarities for image features if available
     if image_index_features is not None and len(image_index_features) > 0:
         predicted_image_features, _ = generate_fiq_val_predictions(
             blip_text_encoder,
@@ -71,19 +70,19 @@ def compute_fiq_val_metrics_text_image_grid_search(
             no_print_output=True,
         )
 
-        # Normalize and compute distances
+        # Normalize and compute similarities
         image_index_features = F.normalize(image_index_features, dim=-1).float()
-        image_distances = 1 - predicted_image_features @ image_index_features.T
+        image_similarities = predicted_image_features @ image_index_features.T
     else:
-        image_distances = torch.zeros_like(all_text_distances[0])
+        image_similarities = torch.zeros_like(all_text_similarities[0])
 
-    # Merge text distances
-    merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
+    # Merge text similarities
+    merged_text_similarities = torch.mean(torch.stack(all_text_similarities), dim=0)
 
     # Iterating over beta values
     for beta in betas:
-        merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
-        sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
+        merged_similarities = beta * merged_text_similarities + (1 - beta) * image_similarities
+        sorted_indices = torch.argsort(merged_similarities, dim=-1, descending=True).cpu()
         sorted_index_names = np.array(image_index_names if image_index_names else multiple_text_index_names[0])[
             sorted_indices]
         labels = torch.tensor(
@@ -110,7 +109,7 @@ def compute_fiq_val_metrics_text_image_grid_search_clip(
     combining_function: callable,
 ) -> pd.DataFrame:
     """
-    Compute validation metrics on FashionIQ dataset combining text and image distances.
+    Compute validation metrics on FashionIQ dataset combining text and image similarities.
 
     :param relative_val_dataset: FashionIQ validation dataset in relative mode
     :param clip_text_encoder: CLIP text encoder
@@ -122,12 +121,12 @@ def compute_fiq_val_metrics_text_image_grid_search_clip(
     :param combining_function: function that combines features
     :return: the computed validation metrics
     """
-    all_text_distances = []
+    all_text_similarities = []
     results = []
     betas = np.arange(0, 1.05, 0.05)
     target_names = None
 
-    # Compute distances for individual text features
+    # Compute similarities for individual text features
     for text_features, text_names in zip(multiple_text_index_features, multiple_text_index_names):
         # Generate text predictions and normalize features
         predicted_text_features, target_names = generate_fiq_val_predictions_clip(
@@ -143,12 +142,11 @@ def compute_fiq_val_metrics_text_image_grid_search_clip(
         text_features = F.normalize(text_features, dim=-1)
         predicted_text_features = F.normalize(predicted_text_features, dim=-1)
 
-        # Compute cosine similarity and convert to distance
+        # Compute cosine similarity
         cosine_similarities = torch.mm(predicted_text_features, text_features.T)
-        distances = 1 - cosine_similarities
-        all_text_distances.append(distances)
+        all_text_similarities.append(cosine_similarities)
 
-    # Normalize and compute distances for image features if available
+    # Normalize and compute similarities for image features if available
     if image_index_features is not None and len(image_index_features) > 0:
         predicted_image_features, _ = generate_fiq_val_predictions_clip(
             clip_text_encoder,
@@ -160,19 +158,19 @@ def compute_fiq_val_metrics_text_image_grid_search_clip(
             no_print_output=True,
         )
 
-        # Normalize and compute distances
+        # Normalize and compute similarities
         image_index_features = F.normalize(image_index_features, dim=-1).float()
-        image_distances = 1 - predicted_image_features @ image_index_features.T
+        image_similarities = predicted_image_features @ image_index_features.T
     else:
-        image_distances = torch.zeros_like(all_text_distances[0])
+        image_similarities = torch.zeros_like(all_text_similarities[0])
 
-    # Merge text distances
-    merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
+    # Merge text similarities
+    merged_text_similarities = torch.mean(torch.stack(all_text_similarities), dim=0)
 
     # Iterating over beta values
     for beta in betas:
-        merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
-        sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
+        merged_similarities = beta * merged_text_similarities + (1 - beta) * image_similarities
+        sorted_indices = torch.argsort(merged_similarities, dim=-1, descending=True).cpu()
         sorted_index_names = np.array(
             image_index_names if image_index_names else multiple_text_index_names[0]
         )[sorted_indices]
@@ -383,7 +381,7 @@ def compute_results_fiq_val(
     :param blip_img_encoder: BLIP image model
     :param text_captions: text captions for the FashionIQ dataset
     :param preprocess: preprocess pipeline
-    :param beta: beta value for combining text and image distances
+    :param beta: beta value for combining text and image similarities
     :param cache: cache dictionary
 
     :return: [(image_path, text_caption, candidate_image_paths)]
@@ -443,9 +441,9 @@ def compute_results_fiq_val(
         no_print_output=True,
     )
 
-    all_text_distances = []
+    all_text_similarities = []
 
-    # Compute distances for individual text features
+    # Compute similarities for individual text features
     for text_features, text_names in zip(multiple_index_features, multiple_index_names):
         # Generate text predictions and normalize features
         predicted_text_features, target_names = generate_fiq_val_predictions(
@@ -460,10 +458,9 @@ def compute_results_fiq_val(
         text_features = F.normalize(text_features, dim=-1)
         predicted_text_features = F.normalize(predicted_text_features, dim=-1)
 
-        # Compute cosine similarity and convert to distance
+        # Compute cosine similarity
         cosine_similarities = torch.mm(predicted_text_features, text_features.T)
-        distances = 1 - cosine_similarities
-        all_text_distances.append(distances)
+        all_text_similarities.append(cosine_similarities)
 
     predicted_image_features, target_names = generate_fiq_val_predictions(
         blip_text_encoder,
@@ -474,16 +471,16 @@ def compute_results_fiq_val(
         no_print_output=True,
     )
 
-    # Normalize and compute distances
+    # Normalize and compute similarities
     image_index_features = F.normalize(image_index_features, dim=-1).float()
-    image_distances = 1 - predicted_image_features @ image_index_features.T
+    image_similarities = predicted_image_features @ image_index_features.T
 
-    # Merge text distances
-    merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
+    # Merge text similarities
+    merged_text_similarities = torch.mean(torch.stack(all_text_similarities), dim=0)
 
-    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
+    merged_similarities = beta * merged_text_similarities + (1 - beta) * image_similarities
 
-    sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
+    sorted_indices = torch.argsort(merged_similarities, dim=-1, descending=True).cpu()
     sorted_index_names = np.array(image_index_names if image_index_names else multiple_index_names[0])[sorted_indices]
     labels = torch.tensor(
         sorted_index_names == np.repeat(
@@ -513,7 +510,7 @@ def compute_results_fiq_val_clip(
     cache: dict = None,
 ) -> Tuple[torch.tensor, List[str], List[str]]:
     """
-    View sample results on FashionIQ dataset combining text and image distances.
+    View sample results on FashionIQ dataset combining text and image similarities.
 
     :param dress_type: FashionIQ category on which performs the retrieval
     :param combining_function: Function which takes as input (image_features, text_features)
@@ -523,7 +520,7 @@ def compute_results_fiq_val_clip(
     :param clip_tokenizer: CLIP tokenizer
     :param text_captions: text captions for the FashionIQ dataset
     :param preprocess: preprocess pipeline
-    :param beta: beta value for combining text and image distances
+    :param beta: beta value for combining text and image similarities
     :param cache: cache dictionary
 
     :return: [(image_path, text_caption, candidate_image_paths)]
@@ -575,9 +572,9 @@ def compute_results_fiq_val_clip(
         no_print_output=True,
     )
 
-    all_text_distances = []
+    all_text_similarities = []
 
-    # Compute distances for individual text features
+    # Compute similarities for individual text features
     for text_features, text_names in zip(multiple_index_features, multiple_index_names):
         # Generate text predictions and normalize features
         predicted_text_features, target_names = generate_fiq_val_predictions_clip(
@@ -593,10 +590,9 @@ def compute_results_fiq_val_clip(
         text_features = F.normalize(text_features, dim=-1)
         predicted_text_features = F.normalize(predicted_text_features, dim=-1)
 
-        # Compute cosine similarity and convert to distance
+        # Compute cosine similarity
         cosine_similarities = torch.mm(predicted_text_features, text_features.T)
-        distances = 1 - cosine_similarities
-        all_text_distances.append(distances)
+        all_text_similarities.append(cosine_similarities)
 
     predicted_image_features, target_names = generate_fiq_val_predictions_clip(
         clip_text_encoder,
@@ -608,16 +604,16 @@ def compute_results_fiq_val_clip(
         no_print_output=True,
     )
 
-    # Normalize and compute distances
+    # Normalize and compute similarities
     image_index_features = F.normalize(image_index_features, dim=-1).float()
-    image_distances = 1 - predicted_image_features @ image_index_features.T
+    image_similarities = predicted_image_features @ image_index_features.T
 
-    # Merge text distances
-    merged_text_distances = torch.mean(torch.stack(all_text_distances), dim=0)
+    # Merge text similarities
+    merged_text_similarities = torch.mean(torch.stack(all_text_similarities), dim=0)
 
-    merged_distances = beta * merged_text_distances + (1 - beta) * image_distances
+    merged_similarities = beta * merged_text_similarities + (1 - beta) * image_similarities
 
-    sorted_indices = torch.argsort(merged_distances, dim=-1).cpu()
+    sorted_indices = torch.argsort(merged_similarities, dim=-1, descending=True).cpu()
     sorted_index_names = np.array(image_index_names if image_index_names else multiple_index_names[0])[sorted_indices]
     labels = torch.tensor(
         sorted_index_names == np.repeat(
