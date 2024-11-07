@@ -9,7 +9,7 @@ Training-free Zero-shot Composed Image Retrieval via Weighted Modality Fusion an
 ##
 
 [![arXiv](https://img.shields.io/badge/arXiv-2409.04918-b31b1b.svg)](https://arxiv.org/abs/2409.04918)
-![GitHub](https://img.shields.io/github/license/whats2000/WeiMoCIR)
+[![GitHub Licence](https://img.shields.io/github/license/whats2000/WeiMoCIR)](https://github.com/whats2000/WeiMoCIR/blob/main/LICENSE)
 	
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/training-free-zs-cir-via-weighted-modality/zero-shot-composed-image-retrieval-zs-cir-on-2)](https://paperswithcode.com/sota/zero-shot-composed-image-retrieval-zs-cir-on-2?p=training-free-zs-cir-via-weighted-modality)
 
