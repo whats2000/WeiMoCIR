@@ -297,7 +297,7 @@ Special thanks to the [Bi-BlipCIR](https://github.com/Cuberick-Orion/Bi-Blip4CIR
 We use the code to evaluate the performance of our proposed method. 
 If you find this code useful for your research, please consider citing the original paper:
 ```bibtex
-@misc{wu2024trainingfreezeroshotcomposedimage,
+@misc{wu2024-weimocir,
       title={Training-free Zero-shot Composed Image Retrieval via Weighted Modality Fusion and Similarity}, 
       author={Ren-Di Wu and Yu-Yen Lin and Huei-Fang Yang},
       year={2024},
