@@ -33,6 +33,9 @@ by combining them with image information using a weighted average.
 Our approach is simple, easy to implement,
 and its effectiveness is validated through experiments on the FashionIQ and CIRR datasets
 
+### Presentation Slide
+Download the [Slide](./TAAI_I79.pdf)
+
 <details>
   <summary>Click to see the details</summary>
 
